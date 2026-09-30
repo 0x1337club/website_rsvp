@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Team RSVP</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="wrap" id="app">
+  <p class="eyebrow" id="event">RSVP</p>
+  <h1 id="team">Loading…</h1>
+  <p class="lede" id="lede">Let us know who from your team is coming. Anyone with this link can update it, and changes save automatically.</p>
+  <div class="tally" id="tally"></div>
+  <section class="card">
+    <div class="bulk">
+      <span>Set everyone at once</span>
+      <button class="btn small" id="all-yes" type="button">All going</button>
+      <button class="btn small" id="all-no" type="button">All not going</button>
+    </div>
+    <ul class="members" id="members"></ul>
+  </section>
+  <p class="savebar" id="savebar" role="status" aria-live="polite"></p>
+</main>
+<script src="/static/team.js"></script>
+</body>
+</html>

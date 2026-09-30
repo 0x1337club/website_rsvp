@@ -1,0 +1,10 @@
+# Local-only data and secrets
+*.csv
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.vercel/

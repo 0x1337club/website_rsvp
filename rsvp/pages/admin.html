@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>RSVP Admin</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<form class="card login hidden" id="login">
+  <p class="eyebrow">Admin</p>
+  <h1>Sign in</h1>
+  <label for="pw">Password</label>
+  <input id="pw" type="password" autocomplete="current-password" required autofocus>
+  <button class="btn primary" type="submit">Sign in</button>
+  <p class="msg" id="login-msg" role="alert"></p>
+</form>
+
+<main class="wrap wide hidden" id="dash">
+  <div class="topbar">
+    <div>
+      <p class="eyebrow" id="event">RSVP</p>
+      <h1>RSVP dashboard</h1>
+      <p class="count" id="updated"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="refresh" type="button">Refresh</button>
+      <label class="btn" for="import-file">Import CSV</label>
+      <input class="visually-hidden" id="import-file" type="file" accept=".csv,text/csv" multiple>
+      <a class="btn" href="/api/admin/links.csv">Team links</a>
+      <a class="btn" href="/api/admin/export.csv">Export replies</a>
+      <button class="btn" id="logout" type="button">Log out</button>
+    </div>
+  </div>
+
+  <div class="card empty hidden" id="empty">
+    <h2>No teams yet</h2>
+    <p>Import the registrations CSV (and the invitations CSV, if you have one) with <strong>Import CSV</strong> above.
+      Each file needs an <code>email</code> column and a <code>team</code> or <code>team_name</code> column; <code>name</code> is optional.
+      You can select several files at once, and importing again later only adds new people.</p>
+  </div>
+  <p class="notice hidden" id="import-result" role="status"></p>
+  <div class="stats" id="stats"></div>
+  <div class="bar" id="bar" aria-hidden="true"></div>
+
+  <div class="filters">
+    <input id="q" type="search" placeholder="Search team, name or email" aria-label="Search">
+    <select id="filter" aria-label="Filter teams">
+      <option value="all">All teams</option>
+      <option value="waiting">Waiting on replies</option>
+      <option value="complete">Everyone replied</option>
+      <option value="silent">No replies yet</option>
+      <option value="has-no">Someone not going</option>
+      <option value="all-yes">Whole team going</option>
+    </select>
+    <select id="sort" aria-label="Sort teams">
+      <option value="name">Sort: team name</option>
+      <option value="pending">Sort: most waiting</option>
+      <option value="yes">Sort: most going</option>
+      <option value="recent">Sort: recently updated</option>
+    </select>
+  </div>
+  <p class="count" id="shown"></p>
+  <div class="card scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th class="num hide-sm">People</th>
+          <th class="num">Going</th>
+          <th class="num">Not going</th>
+          <th class="num">No reply</th>
+          <th class="hide-sm">Last update</th>
+          <th class="links"><span class="hide-sm">Link</span></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/static/admin.js"></script>
+</body>
+</html>

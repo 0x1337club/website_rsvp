@@ -1,0 +1,8 @@
+# Local-only data and secrets: never upload attendee data, databases or .env files
+*.csv
+*.db
+*.db-*
+.env
+.env.*
+.venv/
+__pycache__/
