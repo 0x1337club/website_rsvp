@@ -55,12 +55,15 @@
       <option value="silent">No replies yet</option>
       <option value="has-no">Someone not going</option>
       <option value="all-yes">Whole team going</option>
+      <option value="unopened">Link not opened yet</option>
+      <option value="opened-silent">Opened link, no replies yet</option>
     </select>
     <select id="sort" aria-label="Sort teams">
       <option value="name">Sort: team name</option>
       <option value="pending">Sort: most waiting</option>
       <option value="yes">Sort: most going</option>
-      <option value="recent">Sort: recently updated</option>
+      <option value="recent">Sort: recently replied</option>
+      <option value="opened">Sort: recently opened</option>
     </select>
   </div>
   <p class="count" id="shown"></p>
@@ -73,7 +76,8 @@
           <th class="num">Going</th>
           <th class="num">Not going</th>
           <th class="num">No reply</th>
-          <th class="hide-sm">Last update</th>
+          <th>Link opened</th>
+          <th class="hide-sm">Last reply</th>
           <th class="links"><span class="hide-sm">Link</span></th>
         </tr>
       </thead>

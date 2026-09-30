@@ -137,7 +137,7 @@ h1 { margin: 4px 0 8px; font-size: 28px; line-height: 1.2; overflow-wrap: anywhe
 .count { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
 
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .table tr.team { cursor: pointer; }
 .table tr.team:hover td { background: var(--surface-2); }
@@ -156,6 +156,8 @@ h1 { margin: 4px 0 8px; font-size: 28px; line-height: 1.2; overflow-wrap: anywhe
 .table .sub td + td { padding-left: 12px; }
 .table .sub tr:last-child td { border-bottom: 0; }
 .muted { color: var(--muted); }
+.table td.opened { white-space: nowrap; }
+.table td.opened small { display: block; margin-top: 2px; font-size: 12px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 label.btn:has(+ .visually-hidden:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 .empty { padding: 20px 24px; margin-bottom: 16px; }
@@ -169,7 +171,7 @@ label.btn:has(+ .visually-hidden:focus-visible) { outline: 2px solid var(--accen
 .toast.show { opacity: 1; }
 
 @media (max-width: 640px) {
-  .table { min-width: 560px; }
+  .table { min-width: 660px; }
   .table .hide-sm { display: none; }
   .table .sub td { padding-left: 16px; }
   .filters select { flex: 1; }

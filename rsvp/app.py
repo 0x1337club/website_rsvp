@@ -89,7 +89,17 @@ SCHEMA = [
     "CREATE UNIQUE INDEX IF NOT EXISTS members_email ON members (lower(email))",
     "CREATE INDEX IF NOT EXISTS members_team ON members (team_id)",
 ]
+# Columns added after the first release; created on the fly so existing databases upgrade themselves.
+MIGRATIONS = [
+    ("teams", "first_opened_at", "TEXT"),
+    ("teams", "last_opened_at", "TEXT"),
+    ("teams", "open_count", "INTEGER NOT NULL DEFAULT 0"),
+]
 _schema_ready = False
+
+# Link scanners, chat-app previews and scripts that shouldn't count as a team opening its link.
+BOT_UA = re.compile(r"bot|crawl|spider|slurp|preview|headless|facebookexternalhit|whatsapp|telegram|discord|"
+                    r"skype|curl|wget|python-|go-http|java/|okhttp|scanner|monitor|existence discovery", re.I)
 
 
 # ---------------------------------------------------------------- database
@@ -119,6 +129,10 @@ class DB:
         try:
             for stmt in SCHEMA:
                 self.conn.execute(stmt.format(pk=pk))
+            for table, column, decl in MIGRATIONS:
+                if column not in self._columns(table):
+                    exists = " IF NOT EXISTS" if self.pg else ""
+                    self.conn.execute(f"ALTER TABLE {table} ADD COLUMN{exists} {column} {decl}")
             self.conn.commit()
         except Exception:
             # Another instance may be creating the same tables at this moment (first requests
@@ -126,6 +140,15 @@ class DB:
             self.conn.rollback()
             return
         _schema_ready = True
+
+    def _columns(self, table):
+        if self.pg:
+            rows = self.conn.execute(
+                "SELECT column_name AS name FROM information_schema.columns "
+                "WHERE table_schema = current_schema() AND table_name = %s", (table,)).fetchall()
+        else:
+            rows = self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+        return {r["name"] for r in rows}
 
     def _sql(self, sql):
         return sql.replace("?", "%s") if self.pg else sql
@@ -208,7 +231,7 @@ def site_url():
 
 
 def summary_payload(db, base):
-    teams = db.all("SELECT id, name, token FROM teams ORDER BY lower(name)")
+    teams = db.all("SELECT id, name, token, first_opened_at, last_opened_at, open_count FROM teams ORDER BY lower(name)")
     members = db.all(
         "SELECT team_id, name, email, status, updated_at FROM members "
         "ORDER BY name = '', lower(name), lower(email)"
@@ -218,7 +241,7 @@ def summary_payload(db, base):
         by_team.setdefault(m["team_id"], []).append(
             {"name": m["name"], "email": m["email"], "status": m["status"], "updated_at": m["updated_at"]}
         )
-    out, totals = [], {"people": 0, "yes": 0, "no": 0, "pending": 0, "teams": 0, "teams_complete": 0}
+    out, totals = [], {"people": 0, "yes": 0, "no": 0, "pending": 0, "teams": 0, "teams_complete": 0, "teams_opened": 0}
     for t in teams:
         ms = by_team.get(t["id"], [])
         yes = sum(1 for m in ms if m["status"] == "yes")
@@ -228,6 +251,8 @@ def summary_payload(db, base):
             "name": t["name"], "link": f"{base}/t/{t['token']}", "members": ms,
             "yes": yes, "no": no, "pending": pending,
             "updated_at": max((m["updated_at"] for m in ms if m["updated_at"]), default=None),
+            "first_opened_at": t["first_opened_at"], "last_opened_at": t["last_opened_at"],
+            "open_count": t["open_count"] or 0,
         })
         totals["people"] += len(ms)
         totals["yes"] += yes
@@ -235,6 +260,7 @@ def summary_payload(db, base):
         totals["pending"] += pending
         totals["teams"] += 1
         totals["teams_complete"] += pending == 0
+        totals["teams_opened"] += bool(t["first_opened_at"])
     return {"event": EVENT_NAME, "generated_at": now_iso(), "totals": totals, "teams": out}
 
 
@@ -417,7 +443,17 @@ def team_get(token):
         team = team_by_token(db, token)
         if not team:
             return error(404, "This link isn't valid.")
+        record_open(db, team)
         return team_payload(db, team)
+
+
+def record_open(db, team):
+    """Count a real visit to a team page (the page's script loads this API; plain link fetches don't)."""
+    if is_admin() or BOT_UA.search(request.headers.get("User-Agent", "")):
+        return
+    stamp = now_iso()
+    db.run("UPDATE teams SET open_count = open_count + 1, last_opened_at = ?, "
+           "first_opened_at = COALESCE(first_opened_at, ?) WHERE id = ?", (stamp, stamp, team["id"]))
 
 
 @app.post("/api/team/<token>/rsvp")
@@ -491,10 +527,11 @@ def admin_export():
         data = summary_payload(db, site_url())
     buf = io.StringIO()
     write = csv_writer(buf)
-    write(["team", "name", "email", "rsvp", "updated_at", "team_link"])
+    write(["team", "name", "email", "rsvp", "updated_at", "team_link", "link_first_opened", "link_last_opened", "link_views"])
     for t in data["teams"]:
         for m in t["members"]:
-            write([t["name"], m["name"], m["email"], m["status"] or "pending", m["updated_at"] or "", t["link"]])
+            write([t["name"], m["name"], m["email"], m["status"] or "pending", m["updated_at"] or "", t["link"],
+                   t["first_opened_at"] or "", t["last_opened_at"] or "", t["open_count"]])
     return csv_download(buf.getvalue(), "rsvp")
 
 

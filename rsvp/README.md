@@ -51,7 +51,7 @@ lose it, make a new hash and replace the variable.
 
 ### 1. Create the project
 
-In Vercel, choose **Add New → Project** and import the `rsvp_website` repo from GitHub.
+In Vercel, choose **Add New → Project** and import the `website_rsvp` repo from GitHub. It's private, so if it isn't listed, click **Adjust GitHub App Permissions** and give Vercel access to it.
 
 - **Root Directory:** `rsvp`
 - **Framework Preset:** Flask (pinned by `vercel.json`; nothing else to set)
@@ -98,6 +98,11 @@ teams. Existing links and replies stay as they are.
 
 **Export replies** on the dashboard downloads everyone's current reply at any time.
 
+The dashboard also shows whether each team has **opened its link**: when it was first and
+last opened, and how many views it has. Visits by signed-in admins, link scanners and chat-app
+previews aren't counted, so "Not opened" means no teammate has loaded the page yet. The
+"Link not opened yet" filter lists teams you may want to remind.
+
 ## Run locally
 
 ```bash
@@ -105,7 +110,7 @@ cd rsvp
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 cp .env.example .env                    # then fill in values, or just run set-password
 .venv/bin/python app.py set-password
-.venv/bin/python app.py import ../infinium-merged-2026-09-29.csv
+.venv/bin/python app.py import /path/to/registrations.csv   # keep CSVs outside the repo
 .venv/bin/python app.py serve           # http://127.0.0.1:8000
 ```
 

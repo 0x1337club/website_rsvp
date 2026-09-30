@@ -102,6 +102,7 @@
     stats.appendChild(stat("no", "Not going", t.no, pct(t.no, t.people) + " of everyone"));
     stats.appendChild(stat("pending", "No reply", t.pending, pct(t.pending, t.people) + " of everyone"));
     stats.appendChild(stat("", "Teams done", t.teams_complete, "of " + t.teams + " fully replied"));
+    stats.appendChild(stat("", "Links opened", t.teams_opened, "of " + t.teams + " teams"));
 
     var bar = $("bar");
     bar.textContent = "";
@@ -118,6 +119,8 @@
     if (filter === "silent" && team.pending !== team.members.length) return false;
     if (filter === "has-no" && !team.no) return false;
     if (filter === "all-yes" && team.yes !== team.members.length) return false;
+    if (filter === "unopened" && team.first_opened_at) return false;
+    if (filter === "opened-silent" && (!team.first_opened_at || team.pending !== team.members.length)) return false;
     if (!q) return true;
     if (team.name.toLowerCase().indexOf(q) !== -1) return true;
     return team.members.some(function (m) {
@@ -130,12 +133,22 @@
     pending: function (a, b) { return b.pending - a.pending || sorters.name(a, b); },
     yes: function (a, b) { return b.yes - a.yes || sorters.name(a, b); },
     recent: function (a, b) { return (b.updated_at || "").localeCompare(a.updated_at || "") || sorters.name(a, b); },
+    opened: function (a, b) { return (b.last_opened_at || "").localeCompare(a.last_opened_at || "") || sorters.name(a, b); },
   };
 
   function statusLabel(s) {
     if (s === "yes") return el("span", { className: "pill yes", text: "Going" });
     if (s === "no") return el("span", { className: "pill no", text: "Not going" });
     return el("span", { className: "pill pending", text: "No reply" });
+  }
+
+  function openedCell(t) {
+    if (!t.first_opened_at) return el("td", {}, [el("span", { className: "pill pending", text: "Not opened" })]);
+    var views = t.open_count === 1 ? "1 view" : t.open_count + " views";
+    return el("td", { className: "opened", title: "First opened " + when(t.first_opened_at) + ", last opened " + when(t.last_opened_at) }, [
+      el("span", { className: "pill yes", text: "Opened" }),
+      el("small", { className: "muted", text: when(t.last_opened_at) + " · " + views }),
+    ]);
   }
 
   function renderRows() {
@@ -148,7 +161,7 @@
     var body = $("rows");
     body.textContent = "";
     if (!teams.length) {
-      body.appendChild(el("tr", {}, [el("td", { colspan: "7", className: "muted", text: "No teams match." })]));
+      body.appendChild(el("tr", {}, [el("td", { colspan: "8", className: "muted", text: "No teams match." })]));
       return;
     }
     teams.forEach(function (t) {
@@ -159,6 +172,7 @@
         el("td", { className: "num yes", text: String(t.yes) }),
         el("td", { className: "num no", text: String(t.no) }),
         el("td", { className: "num pending", text: String(t.pending) }),
+        openedCell(t),
         el("td", { className: "muted hide-sm", text: when(t.updated_at) }),
         el("td", { className: "links" }, [
           el("button", { type: "button", className: "btn small", "data-copy": t.link, text: "Copy link" }),
@@ -175,7 +189,7 @@
           el("td", { className: "muted hide-sm", text: when(m.updated_at) }),
         ]);
       }));
-      body.appendChild(el("tr", { className: "detail" }, [el("td", { colspan: "7" }, [sub])]));
+      body.appendChild(el("tr", { className: "detail" }, [el("td", { colspan: "8" }, [sub])]));
     });
   }
 
